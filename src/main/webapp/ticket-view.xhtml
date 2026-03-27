@@ -1,0 +1,186 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+    <f:metadata>
+        <f:viewParam name="id" />
+        <f:viewAction action="#{ticketDetailBean.init}" />
+    </f:metadata>
+
+    <ui:define name="title">Ticket Details - IT-Ticket-System</ui:define>
+
+    <ui:define name="content">
+        <!-- Navigation und Aktions-Buttons oben -->
+        <div class="flex-between mb-8">
+            <h:link outcome="tickets" class="nav-btn">
+                <i class="pi pi-arrow-left"></i> Zurück zu Tickets
+            </h:link>
+            <div class="flex-center">
+                <p:button icon="pi pi-pencil" value="Bearbeiten" outcome="ticket-detail" styleClass="ui-button-primary">
+                    <f:param name="id" value="#{ticketDetailBean.ticket.id}" />
+                </p:button>
+                <h:form>
+                    <p:commandButton icon="pi pi-trash" value="Löschen" action="#{ticketDetailBean.delete}"
+                        styleClass="ui-button-danger">
+                        <p:confirm header="Bestätigung" message="Möchten Sie dieses Ticket wirklich löschen?"
+                            icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </h:form>
+            </div>
+        </div>
+
+        <p:card>
+            <div class="p-4">
+                <!-- Kopfbereich: Nummer und Typ -->
+                <div class="flex-center mb-2">
+                    <span class="text-primary font-bold text-small">
+                        Ticket ##{ticketDetailBean.ticket.ticketNumber}
+                    </span>
+                    <p:tag value="#{ticketDetailBean.ticket.featureType}"
+                        styleClass="#{ticketDetailBean.ticket.featureType.name() == 'BUG' ? 'ui-tag-danger' : 'ui-tag-info'}" />
+                </div>
+
+                <!-- Titel -->
+                <h1 class="mb-4">#{ticketDetailBean.ticket.functionName}</h1>
+
+                <!-- Status-Badges -->
+                <div class="flex-center mb-8 gap-2">
+                    <p:tag value="#{ticketDetailBean.ticket.priority.label}"
+                        severity="#{ticketDetailBean.ticket.priority.name() == 'HOCH' ? 'danger' : (ticketDetailBean.ticket.priority.name() == 'MITTEL' ? 'warning' : 'info')}" />
+                    <p:tag value="#{ticketDetailBean.ticket.status.label}"
+                        severity="#{ticketDetailBean.ticket.status.name() == 'OFFEN' ? 'info' : ((ticketDetailBean.ticket.status.name() == 'GELOEST' or ticketDetailBean.ticket.status.name() == 'GELOEST_BESTAETIGT') ? 'success' : 'warning')}" />
+                    <p:tag value="Öffentlich: #{ticketDetailBean.ticket.public ? 'Ja' : 'Nein'}"
+                        style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0" />
+                </div>
+
+                <!-- Info-Grid: Datenbank und Status -->
+                <div class="detail-grid mb-8">
+                    <div
+                        class="data-box #{ticketDetailBean.ticket.affectedDatabase.equalsIgnoreCase('Produktion') ? 'data-box-red' : 'data-box-blue'}">
+                        <span class="label-caps mb-2">BETROFFENE DATENBANK</span>
+                        <div class="data-value">#{ticketDetailBean.ticket.affectedDatabase}</div>
+                    </div>
+                    <div class="data-box data-box-blue">
+                        <span class="label-caps mb-2">Status</span>
+                        <p:tag value="#{ticketDetailBean.ticket.status.label}" styleClass="rounded-8"
+                            style="background: #dbeafe; color: #1e40af; font-weight: 600" />
+                    </div>
+                </div>
+
+                <!-- Beschreibung -->
+                <div class="description-area mb-8 p-4 bg-white border-round shadow-1">
+                    <span class="label-caps mb-2 block">BESCHREIBUNG</span>
+                    <div class="text-main" style="font-size: 1.125rem; white-space: pre-wrap; word-wrap: break-word;">
+                        #{ticketDetailBean.ticket.description}
+                    </div>
+                </div>
+
+                <!-- Screenshot Bereich -->
+                <h:panelGroup rendered="#{not empty ticketDetailBean.ticket.screenshotUrls}">
+                    <div class="mb-8">
+                        <span class="label-caps mb-4">SCREENSHOTS / ANHÄNGE</span>
+                        <div class="flex-start gap-4 flex-wrap">
+                            <ui:repeat value="#{ticketDetailBean.ticket.screenshotUrls}" var="url">
+                                <div class="screenshot-container">
+                                    <img src="#{url}" alt="Ticket Screenshot" class="screenshot-img" />
+                                    <div class="p-2 flex-center border-top bg-light">
+                                        <i class="pi pi-image text-primary"></i>
+                                        <span class="text-tiny font-semibold truncate"
+                                            style="max-width: 150px; color: #475569">
+                                            #{url.startsWith('data:') ? 'Hochgeladenes Bild' : url}
+                                        </span>
+                                    </div>
+                                </div>
+                            </ui:repeat>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+                <!-- Admin-Optionen (Nur für Admins sichtbar) -->
+                <h:panelGroup rendered="#{loginBean.currentUser.role == 'ADMIN'}">
+                    <div class="pt-8 border-top">
+                        <div class="flex-center mb-4">
+                            <i class="pi pi-lock text-muted"></i>
+                            <h2 class="text-small">Admin-Informationen</h2>
+                        </div>
+                        <div class="detail-grid-tri mb-4">
+                            <div class="data-box data-box-purple">
+                                <span class="label-caps mb-2">Zeitaufwand</span>
+                                <div class="data-value">
+                                    #{ticketDetailBean.ticket.timeEffort} #{ticketDetailBean.ticket.timeUnit.label}
+                                </div>
+                            </div>
+                            <div class="data-box data-box-green">
+                                <span class="label-caps mb-2">SCM STATUS</span>
+                                <div class="flex-column font-bold">
+                                    <div class="flex-center" style="font-size: 1.125rem;">
+                                        <i
+                                            class="#{ticketDetailBean.ticket.checkedInScm ? 'pi pi-check-circle' : 'pi pi-times-circle'}"></i>
+                                        #{ticketDetailBean.ticket.checkedInScm ? 'In SCM eingecheckt' : 'Nicht
+                                        eingecheckt'}
+                                    </div>
+                                    <h:panelGroup
+                                        rendered="#{ticketDetailBean.ticket.checkedInScm and not empty ticketDetailBean.ticket.checkedInAt}">
+                                        <div class="mt-2 p-2 bg-white border-round"
+                                            style="display:inline-block; border: 1px solid #dcfce7; color: #166534">
+                                            <i class="pi pi-calendar-check mr-1"></i>
+                                            am <h:outputText value="#{ticketDetailBean.ticket.checkedInAt}">
+                                                <f:convertDateTime pattern="dd.MM.yyyy" type="localDateTime" />
+                                            </h:outputText>
+                                        </div>
+                                    </h:panelGroup>
+                                </div>
+                            </div>
+                            <div class="data-box data-box-blue">
+                                <span class="label-caps mb-2">ZUGWIESEN AN</span>
+                                <div class="flex-center font-bold" style="font-size: 1.125rem;">
+                                    <i class="pi pi-user"></i>
+                                    #{not empty ticketDetailBean.ticket.assignedToName ?
+                                    ticketDetailBean.ticket.assignedToName : 'Nicht zugewiesen'}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-grid mb-4">
+                            <div class="data-box data-box-blue shadow-1">
+                                <span class="label-caps mb-2">TEST VON 2 ENTWICKLERN</span>
+                                <div class="p-4 bg-white border-round mt-2"
+                                    style="border: 1px dashed #3b82f6; color: #1e3a8a; min-height: 60px;">
+                                    <i class="pi pi-verified mr-2 text-primary"></i>
+                                    <h:outputText
+                                        value="#{not empty ticketDetailBean.ticket.testedByDevelopers ? ticketDetailBean.ticket.testedByDevelopers : 'Noch nicht getestet'}"
+                                        styleClass="font-semibold" />
+                                </div>
+                            </div>
+                        </div>
+                        <h:panelGroup rendered="#{not empty ticketDetailBean.ticket.adminComment}">
+                            <div class="data-box data-box-amber">
+                                <span class="label-caps mb-2">ADMIN KOMMENTAR</span>
+                                <div style="color: #78350f; line-height: 1.5">#{ticketDetailBean.ticket.adminComment}
+                                </div>
+                            </div>
+                        </h:panelGroup>
+                    </div>
+                </h:panelGroup>
+
+                <!-- Footer-Metadaten -->
+                <div class="mt-8 pt-4 border-top flex-column gap-2">
+                    <div class="flex-center text-muted text-small">
+                        <i class="pi pi-user text-tiny"></i>
+                        Erstellt von <span class="font-bold"
+                            style="color: #475569">#{ticketDetailBean.ticket.createdByName}</span>
+                        (#{ticketDetailBean.ticket.createdByRole})
+                    </div>
+                    <div class="flex-center text-muted text-small">
+                        <i class="pi pi-calendar text-tiny"></i>
+                        Erstellt am <span class="font-bold" style="color: #475569">
+                            <h:outputText value="#{ticketDetailBean.ticket.createdAt}">
+                                <f:convertDateTime pattern="dd.MM.yyyy HH:mm" type="localDateTime" />
+                            </h:outputText>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </p:card>
+    </ui:define>
+
+</ui:composition>

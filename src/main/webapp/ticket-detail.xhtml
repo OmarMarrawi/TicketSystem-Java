@@ -1,0 +1,201 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+    <f:metadata>
+        <f:viewParam name="id" />
+        <f:viewAction action="#{ticketDetailBean.init}" />
+    </f:metadata>
+
+    <ui:define name="title">Ticket bearbeiten - IT-Ticket-System</ui:define>
+
+    <ui:define name="content">
+        <!-- Kopfbereich mit Titel und Lösch-Button -->
+        <div class="mb-8">
+            <h:link outcome="tickets" class="nav-btn mb-4">
+                <i class="pi pi-arrow-left"></i> Zurück zu Tickets
+            </h:link>
+            <div class="flex-between">
+                <div class="flex-center">
+                    <h1>Ticket bearbeiten</h1>
+                    <span class="text-muted font-semibold" style="font-size: 1.25rem;">
+                        Ticket ##{ticketDetailBean.ticket.ticketNumber}
+                    </span>
+                    <p:tag value="#{ticketDetailBean.ticket.featureType}"
+                        styleClass="#{ticketDetailBean.ticket.featureType == 'BUG' ? 'ui-tag-danger' : 'ui-tag-info'}" />
+                </div>
+                <h:form>
+                    <p:commandButton icon="pi pi-trash" value="Löschen" action="#{ticketDetailBean.delete}"
+                        styleClass="ui-button-danger ui-button-flat">
+                        <p:confirm header="Bestätigung" message="Möchten Sie dieses Ticket wirklich löschen?"
+                            icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </h:form>
+            </div>
+        </div>
+
+        <div class="max-w-1000">
+            <h:form id="editForm" enctype="multipart/form-data">
+                <p:card>
+                    <p:messages id="messages" showDetail="true" closable="true" />
+                    <div class="ui-fluid p-4">
+                        <!-- Hauptdaten (Funktion & Beschreibung) -->
+                        <div class="field mb-4">
+                            <p:outputLabel for="function" value="Funktion *" styleClass="label-caps mb-2" />
+                            <p:inputText id="function" value="#{ticketDetailBean.ticket.functionName}"
+                                required="true" />
+                        </div>
+
+                        <div class="detail-grid mt-4">
+                            <div class="field">
+                                <p:outputLabel for="type" value="Feature Typ *" styleClass="label-caps mb-2" />
+                                <p:selectOneMenu id="type" value="#{ticketDetailBean.ticket.featureType}">
+                                    <f:selectItems value="#{createTicketBean.getFeatureTypes()}" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="field">
+                                <p:outputLabel for="db" value="Betroffene Datenbank *" styleClass="label-caps mb-2" />
+                                <p:inputText id="db" value="#{ticketDetailBean.ticket.affectedDatabase}"
+                                    required="true" />
+                            </div>
+                        </div>
+
+                        <div class="field mt-4">
+                            <p:outputLabel for="description" value="Beschreibung *" styleClass="label-caps mb-2" />
+                            <p:inputTextarea id="description" value="#{ticketDetailBean.ticket.description}"
+                                required="true" rows="5" />
+                        </div>
+
+                        <!-- Status, Priorität & Zuweisung -->
+                        <div class="detail-grid-tri mt-4">
+                            <div class="field">
+                                <p:outputLabel for="priority" value="Priorisierung *" styleClass="label-caps mb-2" />
+                                <p:selectOneMenu id="priority" value="#{ticketDetailBean.ticket.priority}">
+                                    <f:selectItems value="#{createTicketBean.getPriorities()}" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="field">
+                                <p:outputLabel for="status" value="Status *" styleClass="label-caps mb-2" />
+                                <p:selectOneMenu id="status" value="#{ticketDetailBean.ticket.status}">
+                                    <f:selectItems value="#{ticketDetailBean.getStatuses()}" var="s"
+                                        itemLabel="#{s.label}" itemValue="#{s}" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="field">
+                                <p:outputLabel for="assignedTo" value="Zuweisen an" styleClass="label-caps mb-2" />
+            <p:selectOneMenu id="assignedTo" value="#{ticketDetailBean.assignedToUserId}"
+                filter="true" filterMatchMode="contains">
+                <f:selectItem itemLabel="-- Nicht zugewiesen --" itemValue="" />
+                <f:selectItems value="#{ticketDetailBean.assignableUsers}" var="user"
+                    itemLabel="#{user.name} (#{user.email})" itemValue="#{user.id}" />
+            </p:selectOneMenu>
+                            </div>
+                        </div>
+
+                        <!-- Screenshot-Feld -->
+                        <div class="field mt-8">
+                            <p:outputLabel value="Screenshots / Dokumentation" styleClass="label-caps mb-2" />
+
+                            <!-- Anzeige der vorhandenen Bilder -->
+                            <h:panelGroup id="screenshotPreview" layout="block" class="mt-2">
+                                <div class="flex-start gap-4 flex-wrap">
+                                    <ui:repeat value="#{ticketDetailBean.ticket.screenshotUrls}" var="url">
+                                        <div class="screenshot-item"
+                                            style="position: relative; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
+                                            <img src="#{url}" class="screenshot-img-preview" alt="Preview" />
+                                            <div class="mt-2 text-center">
+                                                <p:commandButton icon="pi pi-trash"
+                                                    action="#{ticketDetailBean.removeScreenshot(url)}"
+                                                    update="editForm:screenshotPreview editForm:messages"
+                                                    styleClass="ui-button-danger ui-button-flat ui-button-sm">
+                                                    <p:confirm header="Bild löschen"
+                                                        message="Möchten Sie dieses Bild wirklich dauerhaft entfernen?"
+                                                        icon="pi pi-exclamation-triangle" />
+                                                </p:commandButton>
+                                            </div>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </h:panelGroup>
+
+                            <!-- Upload-Bereich für neue Screenshots (Auto-Upload) -->
+                            <div class="mt-4 p-4 border-dashed"
+                                style="border: 2px dashed #ccc; border-radius: 8px; text-align: center;">
+
+                                <p:fileUpload listener="#{ticketDetailBean.onFileUpload}" mode="advanced" auto="true"
+                                    update="screenshotPreview messages" label="Bild sofort hinzufügen"
+                                    allowTypes="/(\.|\/)(gif|jpe?g|png)$/" sizeLimit="5000000" />
+                            </div>
+                        </div>
+
+                        <!-- Admin-Sektion (Nur für Admins sichtbar) -->
+                        <h:panelGroup rendered="#{loginBean.currentUser.role == 'ADMIN'}">
+                            <div class="mt-8 border-top pt-8">
+                                <div class="flex-center mb-8">
+                                    <i class="pi pi-shield text-muted"></i>
+                                    <h2 class="text-small">Admin-Bereich</h2>
+                                </div>
+
+                                <div class="flex-start gap-4 mb-8">
+                                    <div class="flex-center">
+                                        <p:inputSwitch id="public" value="#{ticketDetailBean.ticket.public}" />
+                                        <p:outputLabel for="public" value="Öffentlich sichtbar"
+                                            styleClass="label-caps" />
+                                    </div>
+                                    <div class="flex-center">
+                                        <p:inputSwitch id="scm" value="#{ticketDetailBean.ticket.checkedInScm}">
+                                            <p:ajax listener="#{ticketDetailBean.onScmToggle}" update="scmDateWrap" />
+                                        </p:inputSwitch>
+                                        <p:outputLabel for="scm" value="Eingecheckt in SCM" styleClass="label-caps" />
+                                        <h:panelGroup id="scmDateWrap">
+                                            <h:panelGroup rendered="#{ticketDetailBean.ticket.checkedInScm}">
+                                                <p:calendar id="checkedInAt" value="#{ticketDetailBean.ticket.checkedInAt}" pattern="dd.MM.yyyy HH:mm" showOn="button" navigator="true" />
+                                            </h:panelGroup>
+                                        </h:panelGroup>
+                                    </div>
+                                </div>
+
+                                <div class="field mb-4">
+                                    <p:outputLabel for="tested" value="Test von 2 Entwicklern"
+                                        styleClass="label-caps mb-2" />
+                                    <p:inputTextarea id="tested" value="#{ticketDetailBean.ticket.testedByDevelopers}"
+                                        placeholder="z.B. Omar, Karl" rows="3" />
+                                </div>
+
+                                <div class="field mt-4">
+                                    <p:outputLabel value="Zeitaufwand" styleClass="label-caps mb-2" />
+                                    <div class="flex-start gap-4" style="max-width: 400px">
+                                        <p:inputNumber value="#{ticketDetailBean.ticket.timeEffort}" placeholder="0"
+                                            style="flex: 1" />
+                                        <p:selectOneMenu value="#{ticketDetailBean.ticket.timeUnit}"
+                                            style="width: 140px">
+                                            <f:selectItems value="#{ticketDetailBean.getTimeUnits()}" var="u"
+                                                itemLabel="#{u.label}" itemValue="#{u}" />
+                                        </p:selectOneMenu>
+                                    </div>
+                                </div>
+
+                                <div class="field mt-4">
+                                    <p:outputLabel for="adminComment" value="Admin Kommentar"
+                                        styleClass="label-caps mb-2" />
+                                    <p:inputTextarea id="adminComment" value="#{ticketDetailBean.ticket.adminComment}"
+                                        rows="4" placeholder="Administrative Notizen..." />
+                                </div>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- Aktions-Buttons am Ende -->
+                        <div class="mt-8 pt-8 border-top flex-center">
+                            <p:commandButton value="Änderungen speichern" icon="pi pi-save"
+                                action="#{ticketDetailBean.update}" update="@form" styleClass="ui-button-primary"
+                                style="flex: 1" />
+                            <p:button value="Abbrechen" outcome="tickets"
+                                styleClass="ui-button-secondary ui-button-flat" style="flex: 1" />
+                        </div>
+                    </div>
+                </p:card>
+            </h:form>
+        </div>
+    </ui:define>
+
+</ui:composition>

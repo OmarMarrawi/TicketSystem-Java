@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Login - IT-Ticket-System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <h:outputStylesheet library="css" name="style.css" />
+</h:head>
+
+<h:body styleClass="login-body">
+    <div class="login-card">
+        <!-- Kopfbereich des Logins -->
+        <div class="login-header">
+            <div class="logo-box login-logo">
+                <h:graphicImage name="logo.gif" library="images" alt="BVL Logo" styleClass="bvl-logo-img" />
+            </div>
+            <h1>BVL-Ticket-System</h1>
+            <p class="text-muted mt-2">Bitte melden Sie sich an, um fortzufahren</p>
+        </div>
+
+        <h:form id="loginForm">
+            <p:messages id="messages" showDetail="true" closable="true">
+                <p:autoUpdate />
+            </p:messages>
+
+            <div class="ui-fluid">
+                <!-- E-Mail Feld -->
+                <div class="field mb-4">
+                    <p:outputLabel for="email" value="E-Mail" styleClass="label-caps mb-2" />
+                    <p:inputText id="email" value="#{loginBean.email}" required="true" placeholder="name@bvl.bund.de" />
+                </div>
+
+                <!-- Passwort Feld -->
+                <div class="field mb-8">
+                    <p:outputLabel for="password" value="Passwort" styleClass="label-caps mb-2" />
+                    <p:password id="password" value="#{loginBean.password}" required="true" toggleMask="true"
+                        redisplay="true" />
+                </div>
+
+                <!-- Login Button -->
+                <p:commandButton value="Anmelden" action="#{loginBean.login}" update="@form"
+                    styleClass="ui-button-primary rounded-8" style="padding: 0.75rem; font-size: 1rem" />
+
+                <div class="text-muted text-tiny" style="text-align: center; margin-top: 2.5rem;">
+                    Noch kein Konto? <p:link outcome="register" value="Jetzt registrieren" /><br/>
+                    Abt.4 - Referat 404 
+                </div>
+            </div>
+        </h:form>
+    </div>
+</h:body>
+
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>
+        <ui:insert name="title">BvL IT-Ticket-System</ui:insert>
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Globales Stylesheet einbinden -->
+    <h:outputStylesheet library="css" name="style.css" />
+    <ui:insert name="head"></ui:insert>
+</h:head>
+
+<h:body>
+    <!-- Kopfzeile mit Navigation -->
+    <div class="header">
+        <h:link outcome="dashboard" class="header-logo">
+            <p:graphicImage name="logo.gif" library="images" alt="BVL Logo"
+                style="height: 64px; width: auto; margin-right: 0.5rem;" />
+            <div class="header-title">
+                <span style="font-weight: 800; color: #1e293b; font-size: 1.2rem;">BVL Abteilung 4</span>
+                <span style="font-weight: 500; color: #64748b; margin-left: 0.25rem">Ticket System</span>
+            </div>
+        </h:link>
+
+        <div class="header-nav">
+            <h:link outcome="dashboard" styleClass="nav-btn #{view.viewId.contains('dashboard') ? 'active' : ''}">
+                <i class="pi pi-home"></i> Dashboard
+            </h:link>
+            <h:link outcome="tickets" styleClass="nav-btn #{view.viewId.contains('tickets') ? 'active' : ''}">
+                <i class="pi pi-list"></i> Tickets
+            </h:link>
+            <h:link outcome="admin" styleClass="nav-btn #{view.viewId.contains('admin') ? 'active' : ''}" rendered="#{loginBean.currentUser.role == 'ADMIN'}">
+                <i class="pi pi-cog"></i> Admin
+            </h:link>
+        </div>
+
+        <!-- Benutzerbereich und Logout -->
+        <div class="user-area">
+            <span class="user-badge">#{loginBean.currentUser.role}</span>
+            <div class="avatar">
+                #{loginBean.currentUser.name.substring(0,1).toUpperCase()}
+            </div>
+            <h:form style="margin-left: 0.5rem">
+                <p:commandLink action="#{loginBean.logout}" style="color: var(--text-muted); font-size: 1.25rem"
+                    title="Abmelden">
+                    <i class="pi pi-sign-out"></i>
+                </p:commandLink>
+            </h:form>
+        </div>
+    </div>
+
+    <!-- Globale Benachrichtigungen -->
+    <p:growl id="growl" showDetail="true" life="3000">
+        <p:autoUpdate />
+    </p:growl>
+
+    <!-- Hauptinhalt -->
+    <div class="container">
+        <ui:insert name="content"></ui:insert>
+    </div>
+
+    <!-- Globaler Bestätigungsdialog -->
+    <h:form>
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+            <p:commandButton value="Nein" type="button" styleClass="ui-confirmdialog-no ui-button-flat" />
+            <p:commandButton value="Ja, Löschen" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" />
+        </p:confirmDialog>
+    </h:form>
+</h:body>
+
+</html>

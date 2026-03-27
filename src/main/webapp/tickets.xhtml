@@ -1,0 +1,182 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+    <ui:define name="title">Tickets - IT-Ticket-System</ui:define>
+
+    <ui:define name="content">
+        <!-- Kopfbereich: Titel und Neu-Button -->
+        <div class="flex-between mb-8">
+            <div>
+                <h1>Tickets</h1>
+                <h:panelGroup id="countWrap">
+                    <p class="text-muted mt-2">
+                        #{ticketBean.filteredTickets != null ? ticketBean.filteredTickets.size() :
+                        ticketBean.tickets.size()} Ticket(s) gefunden
+                    </p>
+                </h:panelGroup>
+            </div>
+            <p:button icon="pi pi-plus" value="Neues Ticket" outcome="create-ticket" styleClass="ui-button-primary" />
+        </div>
+
+        <!-- Haupt-Tabelle mit integrierten Filtern -->
+        <p:card>
+            <h:form id="form">
+                <p:dataTable id="ticketsTable"
+                    value="#{ticketBean.filteredTickets != null ? ticketBean.filteredTickets : ticketBean.tickets}"
+                    var="ticket" paginator="true" rows="10" paginatorPosition="bottom" widgetVar="ticketsTable"
+                    emptyMessage="Keine Tickets gefunden" styleClass="ui-datatable-borderless">
+
+                    <p:ajax event="filter" update=":countWrap" />
+
+                    <f:facet name="header">
+                        <div class="filter-bar p-2"
+                            style="display: flex; gap: 1rem; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 1rem; align-items: center; flex: 1;">
+                                <!-- Globales Suchfeld -->
+                                <div class="search-field-wrapper" style="max-width: 400px; flex: 1;">
+                                    <i class="pi pi-search" />
+                                    <p:inputText id="globalFilter" value="#{ticketBean.globalFilter}"
+                                        placeholder="Tickets durchsuchen...">
+                                        <p:ajax event="keyup" listener="#{ticketBean.onFilterChange}" update="ticketsTable :countWrap" delay="500" />
+                                    </p:inputText>
+                                </div>
+
+                                <!-- Status Filter -->
+                                <p:selectOneMenu id="statusFilter" value="#{ticketBean.statusFilter}"
+                                    style="min-width: 150px;">
+                                    <f:selectItem itemLabel="Alle Status" itemValue="#{null}"
+                                        noSelectionOption="true" />
+                                    <f:selectItems value="#{ticketBean.statuses}" var="s" itemLabel="#{s.label}"
+                                        itemValue="#{s.label}" />
+                                    <p:ajax listener="#{ticketBean.onFilterChange}" update="ticketsTable :countWrap" />
+                                </p:selectOneMenu>
+
+                                <!-- Priorität Filter -->
+                                <p:selectOneMenu id="priorityFilter" value="#{ticketBean.priorityFilter}"
+                                    style="min-width: 150px;">
+                                    <f:selectItem itemLabel="Alle Prioritäten" itemValue="#{null}"
+                                        noSelectionOption="true" />
+                                    <f:selectItems value="#{ticketBean.priorities}" var="p" itemLabel="#{p.label}"
+                                        itemValue="#{p.label}" />
+                                    <p:ajax listener="#{ticketBean.onFilterChange}" update="ticketsTable :countWrap" />
+                                </p:selectOneMenu>
+                            </div>
+                            
+                            <!-- Excel Export Button -->
+                            <div class="export-button">
+                                <p:commandButton title="Exportieren nach Excel" icon="pi pi-file-excel" styleClass="ui-button-success ui-button-flat" ajax="false">
+                                    <p:dataExporter type="xlsx" target="ticketsTable" fileName="tickets_export" postProcessor="#{ticketBean.postProcessXLS}" />
+                                </p:commandButton>
+                            </div>
+                        </div>
+                    </f:facet>
+
+                    <!-- Ticket-Nummer -->
+                    <p:column headerText="Ticket Nr" width="100" sortBy="#{ticket.ticketNumber}"
+                        filterBy="#{ticket.ticketNumber}" filterMatchMode="contains" filterStyle="display:none"
+                        exportValue="#{ticket.ticketNumber}">
+                        <f:facet name="header">
+                            <h:outputText value="Ticket Nr" />
+                        </f:facet>
+                        <h:link outcome="ticket-view" styleClass="text-primary font-bold" style="text-decoration: none">
+                            <f:param name="id" value="#{ticket.id}" />
+                            ##{ticket.ticketNumber}
+                        </h:link>
+                    </p:column>
+
+                    <!-- Titel der Funktion -->
+                    <p:column headerText="Funktion" sortBy="#{ticket.functionName}" filterBy="#{ticket.functionName}"
+                        filterMatchMode="contains" filterStyle="display:none" exportValue="#{ticket.functionName}">
+                        <f:facet name="header">
+                            <h:outputText value="Funktion" />
+                        </f:facet>
+                        <div class="font-semibold">#{ticket.functionName}</div>
+                    </p:column>
+
+                    <!-- Typ (Bug/Feature) -->
+                    <p:column headerText="Typ" width="110" exportValue="#{ticket.featureType}">
+                        <f:facet name="header">
+                            <h:outputText value="Typ" />
+                        </f:facet>
+                        <p:tag value="#{ticket.featureType}"
+                            styleClass="#{ticket.featureType == 'BUG' ? 'ui-tag-danger' : 'ui-tag-info'}" />
+                    </p:column>
+
+                    <!-- Datenbank-Info -->
+                    <p:column headerText="Betroffene DB" sortBy="#{ticket.affectedDatabase}" exportValue="#{ticket.affectedDatabase}">
+                        <f:facet name="header">
+                            <h:outputText value="Betroffene DB" />
+                        </f:facet>
+                        <div class="text-muted">#{ticket.affectedDatabase}</div>
+                    </p:column>
+
+                    <!-- Status -->
+                    <p:column headerText="Status" filterBy="#{ticket.status.label}"
+                        filterValue="#{ticketBean.statusFilter}" filterMatchMode="exact" width="150"
+                        sortBy="#{ticket.status.label}" filterStyle="display:none" exportValue="#{ticket.status.label}">
+                        <f:facet name="header">
+                            <h:outputText value="Status" />
+                        </f:facet>
+                        <p:tag value="#{ticket.status.label}"
+                            severity="#{ticket.status.name() == 'OFFEN' ? 'info' : ((ticket.status.name() == 'GELOEST' or ticket.status.name() == 'GELOEST_BESTAETIGT') ? 'success' : 'warning')}" />
+                    </p:column>
+
+                    <!-- Priorisierung -->
+                    <p:column headerText="Prio" filterBy="#{ticket.priority.label}"
+                        filterValue="#{ticketBean.priorityFilter}" filterMatchMode="exact" width="140"
+                        sortBy="#{ticket.priority.label}" filterStyle="display:none" exportValue="#{ticket.priority.label}">
+                        <f:facet name="header">
+                            <h:outputText value="Prio" />
+                        </f:facet>
+                        <p:tag value="#{ticket.priority.label}"
+                            severity="#{ticket.priority.name() == 'HOCH' ? 'danger' : (ticket.priority.name() == 'MITTEL' ? 'warning' : 'info')}" />
+                    </p:column>
+
+                    <!-- Beschreibung (Nur für Export, im UI ausgeblendet via Style) -->
+                    <p:column headerText="Beschreibung" exportValue="#{ticket.description}" style="display:none !important;">
+                        <f:facet name="header">
+                            <h:outputText value="Beschreibung" />
+                        </f:facet>
+                        <h:outputText value="#{ticket.description}" />
+                    </p:column>
+
+                    <!-- Öffentlich (Nur für Export, im UI ausgeblendet via Style) -->
+                    <p:column headerText="Öffentlich" exportValue="#{ticket.public ? 'Ja' : 'Nein'}" style="display:none !important;">
+                        <f:facet name="header">
+                            <h:outputText value="Öffentlich" />
+                        </f:facet>
+                        <h:outputText value="#{ticket.public ? 'Ja' : 'Nein'}" />
+                    </p:column>
+
+
+
+                    <!-- Aktions-Icons -->
+                    <p:column headerText="Aktionen" width="120" style="text-align: center" exportable="false">
+                        <div class="flex-center" style="justify-content: center">
+                            <p:link outcome="ticket-view" styleClass="text-primary" style="font-size: 1.1rem"
+                                title="Ansehen">
+                                <f:param name="id" value="#{ticket.id}" />
+                                <i class="pi pi-eye" />
+                            </p:link>
+                            <p:link outcome="ticket-detail" styleClass="text-muted" style="font-size: 1.1rem"
+                                title="Bearbeiten">
+                                <f:param name="id" value="#{ticket.id}" />
+                                <i class="pi pi-pencil" />
+                            </p:link>
+                            <p:commandLink style="color: #ef4444; font-size: 1.1rem" title="Löschen"
+                                action="#{ticketDetailBean.delete}">
+                                <f:setPropertyActionListener value="#{ticket}" target="#{ticketDetailBean.ticket}" />
+                                <i class="pi pi-trash" />
+                                <p:confirm header="Bestätigung" message="Möchten Sie dieses Ticket wirklich löschen?"
+                                    icon="pi pi-exclamation-triangle" />
+                            </p:commandLink>
+                        </div>
+                    </p:column>
+
+                </p:dataTable>
+            </h:form>
+        </p:card>
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,164 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+    <ui:define name="title">Admin-Bereich - IT-Ticket-System</ui:define>
+
+    <ui:define name="content">
+        <div class="mb-8">
+            <h1>Admin-Bereich</h1>
+            <p class="text-muted mt-2">Systemverwaltung und Konfiguration</p>
+        </div>
+
+        <div class="grid">
+            <!-- Benutzer-Verwaltung -->
+            <div class="col-12 md:col-6 lg:col-4">
+                <p:card styleClass="admin-card">
+                    <f:facet name="header">
+                        <div style="text-align: center; padding: 1rem;">
+                            <i class="pi pi-users" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                    </f:facet>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">Benutzer-Verwaltung</h3>
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Verwalten Sie alle Benutzerkonten und Rollen im System
+                    </p>
+                    <div style="text-align: center;">
+                        <p:button value="Benutzer verwalten" icon="pi pi-users" 
+                                 styleClass="ui-button-outlined" outcome="users" />
+                    </div>
+                </p:card>
+            </div>
+
+            <!-- System-Statistiken -->
+            <div class="col-12 md:col-6 lg:col-4">
+                <p:card styleClass="admin-card">
+                    <f:facet name="header">
+                        <div style="text-align: center; padding: 1rem;">
+                            <i class="pi pi-chart-bar" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                    </f:facet>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">System-Statistiken</h3>
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Detaillierte Auswertungen und Berichte zum Ticket-System
+                    </p>
+                    <div style="text-align: center;">
+                        <p:button value="Statistiken anzeigen" icon="pi pi-chart-bar" 
+                                 styleClass="ui-button-outlined" outcome="statistics" />
+                    </div>
+                </p:card>
+            </div>
+
+            <!-- Datenbank-Verwaltung -->
+            <div class="col-12 md:col-6 lg:col-4">
+                <p:card styleClass="admin-card">
+                    <f:facet name="header">
+                        <div style="text-align: center; padding: 1rem;">
+                            <i class="pi pi-database" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                    </f:facet>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">Datenbank-Verwaltung</h3>
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Datenbank-Backup, Wartung und Migrationstools
+                    </p>
+                    <div style="text-align: center;">
+                        <p:button value="Datenbank verwalten" icon="pi pi-database" 
+                                 styleClass="ui-button-outlined" outcome="database" />
+                    </div>
+                </p:card>
+            </div>
+
+            <!-- System-Einstellungen -->
+            <div class="col-12 md:col-6 lg:col-4">
+                <p:card styleClass="admin-card">
+                    <f:facet name="header">
+                        <div style="text-align: center; padding: 1rem;">
+                            <i class="pi pi-cog" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                    </f:facet>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">System-Einstellungen</h3>
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Globale Konfiguration und Systemparameter
+                    </p>
+                    <div style="text-align: center;">
+                        <p:button value="Einstellungen bearbeiten" icon="pi pi-cog" 
+                                 styleClass="ui-button-outlined" outcome="settings" />
+                    </div>
+                </p:card>
+            </div>
+
+            <!-- Audit-Logs -->
+            <div class="col-12 md:col-6 lg:col-4">
+                <p:card styleClass="admin-card">
+                    <f:facet name="header">
+                        <div style="text-align: center; padding: 1rem;">
+                            <i class="pi pi-file" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                    </f:facet>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">Audit-Logs</h3>
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Systemprotokolle und Aktivitätsverfolgung
+                    </p>
+                    <div style="text-align: center;">
+                        <p:button value="Logs anzeigen" icon="pi pi-file" 
+                                 styleClass="ui-button-outlined" outcome="logs" />
+                    </div>
+                </p:card>
+            </div>
+
+            <!-- System-Info -->
+            <div class="col-12 md:col-6 lg:col-4">
+                <p:card styleClass="admin-card">
+                    <f:facet name="header">
+                        <div style="text-align: center; padding: 1rem;">
+                            <i class="pi pi-info-circle" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                    </f:facet>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">System-Informationen</h3>
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Technische Details und Systemstatus
+                    </p>
+                    <div style="text-align: center;">
+                        <p:button value="System-Info" icon="pi pi-info-circle" 
+                                 styleClass="ui-button-outlined" outcome="system-info" />
+                    </div>
+                </p:card>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <p:card styleClass="mt-4">
+            <f:facet name="header">
+                <h3>Quick Stats</h3>
+            </f:facet>
+            <div class="grid">
+                <div class="col-12 md:col-3">
+                    <div class="text-center">
+                        <h2 style="color: var(--primary-color); margin: 0;">#{adminBean.dashboardStats.totalTickets}</h2>
+                        <p class="text-muted">Gesamte Tickets</p>
+                    </div>
+                </div>
+                <div class="col-12 md:col-3">
+                    <div class="text-center">
+                        <h2 style="color: var(--orange-500); margin: 0;">#{adminBean.dashboardStats.byStatus['Offen'] ?: 0}</h2>
+                        <p class="text-muted">Offene Tickets</p>
+                    </div>
+                </div>
+                <div class="col-12 md:col-3">
+                    <div class="text-center">
+                        <h2 style="color: var(--green-500); margin: 0;">#{(adminBean.dashboardStats.byStatus['Gelöst'] ?: 0) + (adminBean.dashboardStats.byStatus['Gelöst bestätigt'] ?: 0)}</h2>
+                        <p class="text-muted">Gelöste/Bestätigte Tickets</p>
+                    </div>
+                </div>
+                <div class="col-12 md:col-3">
+                    <div class="text-center">
+                        <h2 style="color: var(--blue-500); margin: 0;">#{adminBean.authService.allUsers.size()}</h2>
+                        <p class="text-muted">Registrierte Benutzer</p>
+                    </div>
+                </div>
+            </div>
+        </p:card>
+
+    </ui:define>
+
+</ui:composition>

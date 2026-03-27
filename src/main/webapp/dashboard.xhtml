@@ -1,0 +1,165 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+    <ui:define name="title">Dashboard - IT-Ticket-System</ui:define>
+
+    <ui:define name="content">
+        <!-- Dashboard Überschrift -->
+        <div class="mb-8">
+            <h1>Dashboard</h1>
+            <p class="text-muted mt-2">Übersicht über alle Tickets</p>
+        </div>
+
+        <!-- Statistik-Karten -->
+        <div class="stats-grid mb-8" style="grid-template-columns: repeat(4, 1fr);">
+            <p:card styleClass="stat-card-ticket">
+                <div class="flex-between">
+                    <span class="label-caps font-bold">Gesamt</span>
+                    <i class="pi pi-ticket text-primary font-bold" style="font-size: 1.25rem"></i>
+                </div>
+                <div class="stat-value">#{ticketBean.stats.totalTickets}</div>
+                <span class="text-tiny text-muted">Alle Tickets</span>
+            </p:card>
+
+            <p:card styleClass="stat-card-clock">
+                <div class="flex-between">
+                    <span class="label-caps font-bold">Offen</span>
+                    <i class="pi pi-clock" style="color: #f97316; font-size: 1.25rem"></i>
+                </div>
+                <div class="stat-value">#{ticketBean.stats.byStatus['Offen']}</div>
+                <span class="text-tiny text-muted">Unbearbeitet</span>
+            </p:card>
+
+            <p:card styleClass="stat-card-process">
+                <div class="flex-between">
+                    <span class="label-caps font-bold">In Bearbeitung</span>
+                    <i class="pi pi-chart-line" style="color: #8b5cf6; font-size: 1.25rem"></i>
+                </div>
+                <div class="stat-value">#{ticketBean.stats.byStatus['In Bearbeitung']}</div>
+                <span class="text-tiny text-muted">Wird bearbeitet</span>
+            </p:card>
+
+            <p:card styleClass="stat-card-resolved">
+                <div class="flex-between">
+                    <span class="label-caps font-bold">Gelöst</span>
+                    <i class="pi pi-check-circle" style="color: #10b981; font-size: 1.25rem"></i>
+                </div>
+                <div class="stat-value">#{ticketBean.stats.byStatus['Gelöst']}</div>
+                <span class="text-tiny text-muted">Abgeschlossen</span>
+            </p:card>
+        </div>
+
+        <div class="detail-grid-tri mb-8">
+            <!-- Verteilung nach Status -->
+            <p:card>
+                <f:facet name="title">
+                    <div class="flex-center mb-4 border-bottom p-4">
+                        <i class="pi pi-list text-muted"></i>
+                        <span class="font-bold text-small">Tickets nach Status</span>
+                    </div>
+                </f:facet>
+                <div class="p-4">
+                    <ui:repeat value="#{ticketBean.stats.byStatus.entrySet()}" var="entry">
+                        <div class="flex-between mb-4">
+                            <p:tag value="#{entry.key}"
+                                severity="#{(entry.key == 'Gelöst' or entry.key == 'Gelöst bestätigt') ? 'success' : (entry.key == 'Offen' ? 'info' : (entry.key == 'In Bearbeitung' ? 'warning' : 'secondary'))}" />
+                            <div class="flex-center">
+                                <div class="stat-bar-bg">
+                                    <div class="stat-bar-fill"
+                                        style="width: #{ticketBean.stats.totalTickets gt 0 ? (entry.value * 100 / ticketBean.stats.totalTickets) : 0}%; background: #{(entry.key == 'Gelöst' or entry.key == 'Gelöst bestätigt') ? '#10b981' : (entry.key == 'Offen' ? '#3b82f6' : (entry.key == 'In Bearbeitung' ? '#f59e0b' : '#64748b'))}" />
+                                </div>
+                                <span class="font-bold" style="width: 20px; text-align: right">#{entry.value}</span>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </div>
+            </p:card>
+
+            <!-- Verteilung nach Priorität -->
+            <p:card>
+                <f:facet name="title">
+                    <div class="flex-center mb-4 border-bottom p-4">
+                        <i class="pi pi-exclamation-triangle text-muted"></i>
+                        <span class="font-bold text-small">Tickets nach Priorität</span>
+                    </div>
+                </f:facet>
+                <div class="p-4">
+                    <ui:repeat value="#{ticketBean.stats.byPriority.entrySet()}" var="entry">
+                        <div class="flex-between mb-4">
+                            <p:tag value="#{entry.key}"
+                                severity="#{entry.key == 'Hoch' ? 'danger' : (entry.key == 'Mittel' ? 'warning' : 'info')}" />
+                            <div class="flex-center">
+                                <div class="stat-bar-bg">
+                                    <div class="stat-bar-fill"
+                                        style="width: #{ticketBean.stats.totalTickets gt 0 ? (entry.value * 100 / ticketBean.stats.totalTickets) : 0}%; background: #{entry.key == 'Hoch' ? '#ef4444' : (entry.key == 'Mittel' ? '#f59e0b' : '#3b82f6')}" />
+                                </div>
+                                <span class="font-bold" style="width: 20px; text-align: right">#{entry.value}</span>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </div>
+            </p:card>
+
+            <!-- Verteilung nach Referat -->
+            <p:card>
+                <f:facet name="title">
+                    <div class="flex-center mb-4 border-bottom p-4">
+                        <i class="pi pi-users text-muted"></i>
+                        <span class="font-bold text-small">Tickets nach Referat</span>
+                    </div>
+                </f:facet>
+                <div class="p-4">
+                    <ui:repeat value="#{ticketBean.stats.byRole.entrySet()}" var="entry">
+                        <div class="flex-between mb-4">
+                            <p:tag value="#{entry.key}" styleClass="rounded-8"
+                                style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0" />
+                            <div class="flex-center">
+                                <div class="stat-bar-bg">
+                                    <div class="stat-bar-fill"
+                                        style="width: #{ticketBean.stats.totalTickets gt 0 ? (entry.value * 100 / ticketBean.stats.totalTickets) : 0}%; background: var(--primary)" />
+                                </div>
+                                <span class="font-bold" style="width: 20px; text-align: right">#{entry.value}</span>
+                            </div>
+                        </div>
+                    </ui:repeat>
+                </div>
+            </p:card>
+        </div>
+
+        <!-- Neueste Tickets -->
+        <p:card>
+            <f:facet name="title">
+                <div class="font-bold border-bottom p-4 mb-4">
+                    Neueste Tickets
+                </div>
+            </f:facet>
+
+            <div class="p-4">
+                <h:outputText value="Noch keine Tickets vorhanden" rendered="#{empty ticketBean.stats.recentTickets}"
+                    styleClass="text-muted"
+                    style="display: block; text-align: center; padding: 2rem; font-style: italic" />
+
+                <ui:repeat value="#{ticketBean.stats.recentTickets}" var="ticket">
+                    <h:link outcome="ticket-view" styleClass="recent-ticket-item">
+                        <f:param name="id" value="#{ticket.id}" />
+                        <div>
+                            <div class="font-bold">#{ticket.functionName}</div>
+                            <div class="text-tiny text-muted mt-2">
+                                von <span class="font-semibold" style="color: #475569">#{ticket.createdByName}</span>
+                                (#{ticket.createdByRole})
+                            </div>
+                        </div>
+                        <div class="flex-center">
+                            <p:tag value="#{ticket.priority.label}"
+                                severity="#{ticket.priority.name() == 'HOCH' ? 'danger' : (ticket.priority.name() == 'MITTEL' ? 'warning' : 'info')}" />
+                            <p:tag value="#{ticket.status.label}"
+                                severity="#{ticket.status.name() == 'OFFEN' ? 'info' : ((ticket.status.name() == 'GELOEST' or ticket.status.name() == 'GELOEST_BESTAETIGT') ? 'success' : (ticket.status.name() == 'IN_BEARBEITUNG' ? 'warning' : 'secondary'))}" />
+                        </div>
+                    </h:link>
+                </ui:repeat>
+            </div>
+        </p:card>
+    </ui:define>
+
+</ui:composition>
