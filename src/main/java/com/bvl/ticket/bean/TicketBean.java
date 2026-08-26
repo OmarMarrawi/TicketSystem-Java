@@ -3,6 +3,7 @@ package com.bvl.ticket.bean;
 import com.bvl.ticket.model.Ticket;
 import com.bvl.ticket.model.User;
 import com.bvl.ticket.model.UserRole;
+import com.bvl.ticket.service.AuthService;
 import com.bvl.ticket.service.TicketService;
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
@@ -43,10 +44,20 @@ public class TicketBean implements Serializable {
 
     @Getter
     @lombok.Setter
+    private Long userFilter;
+
+    @Getter
+    @lombok.Setter
     private String globalFilter;
+
+    @Getter
+    private List<User> allUsers;
 
     @Inject
     private TicketService ticketService;
+
+    @Inject
+    private AuthService authService;
 
     @Inject
     private LoginBean loginBean;
@@ -69,6 +80,8 @@ public class TicketBean implements Serializable {
             // Tickets laden: Admins sehen alles, Referate nur ihre eigenen
             if (user.getRole() == UserRole.ADMIN) {
                 tickets = ticketService.getAllTickets();
+                // Alle Benutzer für den Ersteller-Filter (nur Admin)
+                allUsers = authService.getAllUsers();
             } else {
                 tickets = ticketService.getTicketsByRole(user.getRole().getLabel());
             }
@@ -110,6 +123,13 @@ public class TicketBean implements Serializable {
                     .collect(java.util.stream.Collectors.toList());
         }
 
+        // Filter nach Ersteller (nur relevant für Admins)
+        if (userFilter != null) {
+            result = result.stream()
+                    .filter(t -> userFilter.equals(t.getCreatedBy()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
         // Globaler Filter (Suchfeld)
         if (globalFilter != null && !globalFilter.trim().isEmpty()) {
             String lowerSearch = globalFilter.toLowerCase().trim();
@@ -126,7 +146,8 @@ public class TicketBean implements Serializable {
         // (PrimeFaces zeigt dann die volle Liste 'tickets')
         if ((statusFilter == null || statusFilter.isEmpty()) &&
                 (priorityFilter == null || priorityFilter.isEmpty()) &&
-                (globalFilter == null || globalFilter.isEmpty())) {
+                (globalFilter == null || globalFilter.isEmpty()) &&
+                userFilter == null) {
             filteredTickets = null;
         } else {
             filteredTickets = result;

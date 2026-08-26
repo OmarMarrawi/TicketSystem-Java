@@ -38,11 +38,18 @@
             <version>3.14.1</version>
         </dependency>
 
-        <!-- MongoDB Java Driver -->
+        <!-- Hibernate ORM (letzte Java-8-kompatible Version) -->
         <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-            <version>4.11.1</version>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>5.6.15.Final</version>
+        </dependency>
+
+        <!-- PostgreSQL JDBC Treiber (kompatibel mit PostgreSQL 16) -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.3</version>
         </dependency>
 
         <!-- Lombok for cleaner code -->

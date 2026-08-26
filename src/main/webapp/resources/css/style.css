@@ -804,3 +804,30 @@ h2 {
         box-shadow: none;
     }
 }
+/* ===== Ticket-Tabelle: kompakte Spalten ===== */
+
+.ellipsis-260 {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ellipsis-120 {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ticket-table thead th.center-header,
+.ticket-table thead th .center-header {
+    text-align: center;
+}
+
+/* Kompaktere Zeilen */
+.ticket-table td, .ticket-table th {
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
+    vertical-align: middle;
+}

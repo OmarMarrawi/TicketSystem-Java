@@ -46,7 +46,7 @@ public class CreateTicketBean implements Serializable {
 
     @Getter
     @Setter
-    private String assignedToUserId; // ID des ausgewählten Benutzers
+    private Long assignedToUserId; // ID des ausgewählten Benutzers
 
     /**
      * Verarbeitet den Datei-Upload während der Erstellung.
@@ -143,7 +143,7 @@ public class CreateTicketBean implements Serializable {
         ticket.setCreatedByRole(user.getRole().getLabel());
 
         // Zugewiesenen Benutzer setzen, falls ausgewählt
-        if (assignedToUserId != null && !assignedToUserId.isEmpty()) {
+        if (assignedToUserId != null) {
             assignableUsers.stream()
                     .filter(u -> u.getId().equals(assignedToUserId))
                     .findFirst()

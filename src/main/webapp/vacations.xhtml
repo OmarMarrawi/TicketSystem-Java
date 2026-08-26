@@ -1,0 +1,105 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+    <ui:define name="title">Urlaub - IT-Ticket-System</ui:define>
+
+    <ui:define name="content">
+        <div class="flex-between mb-8">
+            <div>
+                <h1>Urlaubsverwaltung</h1>
+                <p class="text-muted mt-2">#{vacationBean.vacations.size()} Urlaubseinträge im Team</p>
+            </div>
+            <h:form id="newVacationForm">
+                <p:commandButton value="Urlaub erfassen" icon="pi pi-plus" action="#{vacationBean.prepareNew}"
+                    update=":vacationDialog" oncomplete="PF('vacationDialogWidget').show()" styleClass="ui-button-primary" />
+            </h:form>
+        </div>
+
+        <p:card>
+            <h:form id="vacationsForm">
+                <p:dataTable id="vacationsTable" value="#{vacationBean.vacations}" var="entry" paginator="true" rows="10"
+                    rowsPerPageTemplate="5,10,20,50" paginatorPosition="bottom" widgetVar="vacationsTableWidget"
+                    emptyMessage="Noch keine Urlaubseinträge vorhanden" stripedRows="true" styleClass="ui-datatable-borderless ticket-table">
+
+                    <f:facet name="header">
+                        <div class="filter-bar p-2" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="font-semibold">Team-Urlaubsplanung</span>
+                            <div class="search-field-wrapper" style="max-width:320px; width:100%;">
+                                <i class="pi pi-search" />
+                                <p:inputText id="globalFilter" onkeyup="PF('vacationsTableWidget').filter()"
+                                    placeholder="Nach Mitarbeiter suchen..." />
+                            </div>
+                        </div>
+                    </f:facet>
+
+                    <p:column headerText="Mitarbeiter" filterBy="#{entry.userName}" filterMatchMode="contains"
+                        sortBy="#{entry.userName}" filterStyle="display:none" width="230">
+                        <div class="flex-center">
+                            <div class="avatar" style="width:32px; height:32px; font-size:.8rem;">#{entry.userName.substring(0,1).toUpperCase()}</div>
+                            <span class="font-semibold">#{entry.userName}</span>
+                        </div>
+                    </p:column>
+                    <p:column headerText="Beginn" sortBy="#{entry.startDate}" width="155">
+                        <i class="pi pi-calendar text-muted" style="margin-right:.5rem" />
+                        <h:outputText value="#{vacationBean.formatDate(entry.startDate)}" />
+                    </p:column>
+                    <p:column headerText="Ende" sortBy="#{entry.endDate}" width="155">
+                        <i class="pi pi-calendar text-muted" style="margin-right:.5rem" />
+                        <h:outputText value="#{vacationBean.formatDate(entry.endDate)}" />
+                    </p:column>
+                    <p:column headerText="Dauer" sortBy="#{vacationBean.getDurationDays(entry)}" width="120">
+                        <p:tag value="#{vacationBean.getDurationDays(entry)} Tage" severity="info" />
+                    </p:column>
+                    <p:column headerText="Notiz" styleClass="ellipsis-260">
+                        <h:outputText value="#{empty entry.note ? '–' : entry.note}" />
+                    </p:column>
+                    <p:column headerText="Aktionen" width="110" style="text-align:center" exportable="false">
+                        <div class="flex-center" style="justify-content:center" rendered="#{vacationBean.canManage(entry)}">
+                            <p:commandLink action="#{vacationBean.edit(entry)}" update=":vacationDialog"
+                                oncomplete="PF('vacationDialogWidget').show()" title="Bearbeiten" styleClass="text-primary">
+                                <i class="pi pi-pencil" />
+                            </p:commandLink>
+                            <p:commandLink action="#{vacationBean.delete(entry)}" update="vacationsTable"
+                                title="Löschen" style="color:#ef4444">
+                                <i class="pi pi-trash" />
+                                <p:confirm header="Urlaub löschen" message="Möchten Sie diesen Urlaubseintrag wirklich löschen?"
+                                    icon="pi pi-exclamation-triangle" />
+                            </p:commandLink>
+                        </div>
+                        <h:outputText value="–" styleClass="text-muted" rendered="#{not vacationBean.canManage(entry)}" />
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </p:card>
+
+        <p:dialog id="vacationDialog" widgetVar="vacationDialogWidget" modal="true" responsive="true" width="500"
+            header="#{vacationBean.editing ? 'Urlaub bearbeiten' : 'Urlaub erfassen'}" appendTo="@(body)">
+            <h:form id="vacationDialogForm">
+                <div class="flex-column gap-4">
+                    <div class="flex-column gap-2">
+                        <h:outputLabel for="startDate" value="Beginn" styleClass="font-semibold" />
+                        <p:datePicker id="startDate" value="#{vacationBean.vacation.startDate}" pattern="dd.MM.yyyy"
+                            showIcon="true" required="true" />
+                    </div>
+                    <div class="flex-column gap-2">
+                        <h:outputLabel for="endDate" value="Ende" styleClass="font-semibold" />
+                        <p:datePicker id="endDate" value="#{vacationBean.vacation.endDate}" pattern="dd.MM.yyyy"
+                            showIcon="true" required="true" />
+                    </div>
+                    <div class="flex-column gap-2">
+                        <h:outputLabel for="note" value="Notiz (optional)" styleClass="font-semibold" />
+                        <p:inputTextarea id="note" value="#{vacationBean.vacation.note}" rows="4" maxlength="1000"
+                            autoResize="false" placeholder="z. B. Sommerurlaub" />
+                    </div>
+                    <div class="flex-center" style="justify-content:flex-end">
+                        <p:commandButton value="Abbrechen" type="button" icon="pi pi-times"
+                            onclick="PF('vacationDialogWidget').hide()" styleClass="ui-button-secondary" />
+                        <p:commandButton value="Speichern" icon="pi pi-save" action="#{vacationBean.save}"
+                            update="@form :vacationsForm" oncomplete="if (!args.validationFailed) PF('vacationDialogWidget').hide()" />
+                    </div>
+                </div>
+            </h:form>
+        </p:dialog>
+    </ui:define>
+</ui:composition>

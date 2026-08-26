@@ -15,6 +15,8 @@ import java.util.Base64;
 import java.util.Map;
 import org.primefaces.model.file.UploadedFile;
 import org.primefaces.event.FileUploadEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
@@ -22,6 +24,9 @@ import org.primefaces.event.FileUploadEvent;
  * @author Omar
  */
 public class TicketDetailBean implements Serializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(TicketDetailBean.class);
+    private static final long serialVersionUID = 1L;
 
     @Getter
     @Setter
@@ -45,7 +50,7 @@ public class TicketDetailBean implements Serializable {
 
     @Getter
     @Setter
-    private String assignedToUserId; // ID des ausgewählten Benutzers
+    private Long assignedToUserId; // ID des ausgewählten Benutzers
 
     /**
      * Initialisiert die Detailansicht.
@@ -53,11 +58,15 @@ public class TicketDetailBean implements Serializable {
      */
     public void init() {
         Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
-        String id = params.get("id");
-        if (id != null) {
-            ticket = ticketService.getTicketById(id);
-            if (ticket != null && ticket.getAssignedTo() != null) {
-                this.assignedToUserId = ticket.getAssignedTo();
+        String idParam = params.get("id");
+        if (idParam != null && !idParam.isEmpty()) {
+            try {
+                ticket = ticketService.getTicketById(Long.valueOf(idParam));
+                if (ticket != null && ticket.getAssignedTo() != null) {
+                    this.assignedToUserId = ticket.getAssignedTo();
+                }
+            } catch (NumberFormatException e) {
+                logger.warn("Ungültige Ticket-ID im Request: {}", idParam);
             }
         }
         assignableUsers = authService.getAllUsers(); // Alle Benutzer laden
@@ -133,7 +142,7 @@ public class TicketDetailBean implements Serializable {
      */
     public String update() {
         // Zugewiesenen Benutzer setzen, falls ausgewählt
-        if (assignedToUserId != null && !assignedToUserId.isEmpty()) {
+        if (assignedToUserId != null) {
             assignableUsers.stream()
                     .filter(u -> u.getId().equals(assignedToUserId))
                     .findFirst()

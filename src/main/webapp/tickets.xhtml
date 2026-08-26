@@ -25,7 +25,9 @@
                 <p:dataTable id="ticketsTable"
                     value="#{ticketBean.filteredTickets != null ? ticketBean.filteredTickets : ticketBean.tickets}"
                     var="ticket" paginator="true" rows="10" paginatorPosition="bottom" widgetVar="ticketsTable"
-                    emptyMessage="Keine Tickets gefunden" styleClass="ui-datatable-borderless">
+                    rowsPerPageTemplate="5,10,20,50"
+                    emptyMessage="Keine Tickets gefunden" stripedRows="true"
+                    styleClass="ui-datatable-borderless ticket-table">
 
                     <p:ajax event="filter" update=":countWrap" />
 
@@ -61,6 +63,16 @@
                                         itemValue="#{p.label}" />
                                     <p:ajax listener="#{ticketBean.onFilterChange}" update="ticketsTable :countWrap" />
                                 </p:selectOneMenu>
+
+                                <!-- Ersteller-Filter (nur Admin) -->
+                                <p:selectOneMenu id="userFilter" value="#{ticketBean.userFilter}"
+                                    style="min-width: 200px;" rendered="#{loginBean.currentUser.role eq 'ADMIN'}">
+                                    <f:selectItem itemLabel="Alle Benutzer" itemValue="#{null}"
+                                        noSelectionOption="true" />
+                                    <f:selectItems value="#{ticketBean.allUsers}" var="u"
+                                        itemLabel="#{u.name} (#{u.role.label})" itemValue="#{u.id}" />
+                                    <p:ajax listener="#{ticketBean.onFilterChange}" update="ticketsTable :countWrap" />
+                                </p:selectOneMenu>
                             </div>
                             
                             <!-- Excel Export Button -->
@@ -73,7 +85,7 @@
                     </f:facet>
 
                     <!-- Ticket-Nummer -->
-                    <p:column headerText="Ticket Nr" width="100" sortBy="#{ticket.ticketNumber}"
+                    <p:column headerText="Ticket Nr" width="90" style="white-space: nowrap;" sortBy="#{ticket.ticketNumber}"
                         filterBy="#{ticket.ticketNumber}" filterMatchMode="contains" filterStyle="display:none"
                         exportValue="#{ticket.ticketNumber}">
                         <f:facet name="header">
@@ -91,32 +103,32 @@
                         <f:facet name="header">
                             <h:outputText value="Funktion" />
                         </f:facet>
-                        <div class="font-semibold">#{ticket.functionName}</div>
+                        <div class="font-semibold ellipsis-260" title="#{ticket.functionName}">#{ticket.functionName}</div>
                     </p:column>
 
                     <!-- Typ (Bug/Feature) -->
-                    <p:column headerText="Typ" width="110" exportValue="#{ticket.featureType}">
+                    <p:column headerText="Typ" width="95" style="text-align: center;" exportValue="#{ticket.featureType}">
                         <f:facet name="header">
-                            <h:outputText value="Typ" />
+                            <h:outputText value="Typ" styleClass="center-header" />
                         </f:facet>
                         <p:tag value="#{ticket.featureType}"
                             styleClass="#{ticket.featureType == 'BUG' ? 'ui-tag-danger' : 'ui-tag-info'}" />
                     </p:column>
 
                     <!-- Datenbank-Info -->
-                    <p:column headerText="Betroffene DB" sortBy="#{ticket.affectedDatabase}" exportValue="#{ticket.affectedDatabase}">
+                    <p:column headerText="Betroffene DB" width="130" sortBy="#{ticket.affectedDatabase}" exportValue="#{ticket.affectedDatabase}">
                         <f:facet name="header">
                             <h:outputText value="Betroffene DB" />
                         </f:facet>
-                        <div class="text-muted">#{ticket.affectedDatabase}</div>
+                        <div class="text-muted ellipsis-120" title="#{ticket.affectedDatabase}">#{ticket.affectedDatabase}</div>
                     </p:column>
 
                     <!-- Status -->
                     <p:column headerText="Status" filterBy="#{ticket.status.label}"
-                        filterValue="#{ticketBean.statusFilter}" filterMatchMode="exact" width="150"
-                        sortBy="#{ticket.status.label}" filterStyle="display:none" exportValue="#{ticket.status.label}">
+                        filterValue="#{ticketBean.statusFilter}" filterMatchMode="exact" width="130"
+                        style="text-align: center;" sortBy="#{ticket.status.label}" filterStyle="display:none" exportValue="#{ticket.status.label}">
                         <f:facet name="header">
-                            <h:outputText value="Status" />
+                            <h:outputText value="Status" styleClass="center-header" />
                         </f:facet>
                         <p:tag value="#{ticket.status.label}"
                             severity="#{ticket.status.name() == 'OFFEN' ? 'info' : ((ticket.status.name() == 'GELOEST' or ticket.status.name() == 'GELOEST_BESTAETIGT') ? 'success' : 'warning')}" />
@@ -124,13 +136,24 @@
 
                     <!-- Priorisierung -->
                     <p:column headerText="Prio" filterBy="#{ticket.priority.label}"
-                        filterValue="#{ticketBean.priorityFilter}" filterMatchMode="exact" width="140"
-                        sortBy="#{ticket.priority.label}" filterStyle="display:none" exportValue="#{ticket.priority.label}">
+                        filterValue="#{ticketBean.priorityFilter}" filterMatchMode="exact" width="100"
+                        style="text-align: center;" sortBy="#{ticket.priority.label}" filterStyle="display:none" exportValue="#{ticket.priority.label}">
                         <f:facet name="header">
-                            <h:outputText value="Prio" />
+                            <h:outputText value="Prio" styleClass="center-header" />
                         </f:facet>
                         <p:tag value="#{ticket.priority.label}"
                             severity="#{ticket.priority.name() == 'HOCH' ? 'danger' : (ticket.priority.name() == 'MITTEL' ? 'warning' : 'info')}" />
+                    </p:column>
+
+                    <!-- Erstellt von (Name + Referat, eine Zeile) -->
+                    <p:column headerText="Erstellt von" width="210" sortBy="#{ticket.createdByName}" exportValue="#{ticket.createdByName} (#{ticket.createdByRole})">
+                        <f:facet name="header">
+                            <h:outputText value="Erstellt von" />
+                        </f:facet>
+                        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="#{ticket.createdByName} (#{ticket.createdByRole})">
+                            <span class="font-semibold">#{ticket.createdByName}</span>
+                            <span class="text-muted" style="font-size: 0.78rem;"> · #{ticket.createdByRole}</span>
+                        </div>
                     </p:column>
 
                     <!-- Beschreibung (Nur für Export, im UI ausgeblendet via Style) -->

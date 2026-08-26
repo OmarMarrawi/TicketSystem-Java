@@ -43,8 +43,8 @@
                         Detaillierte Auswertungen und Berichte zum Ticket-System
                     </p>
                     <div style="text-align: center;">
-                        <p:button value="Statistiken anzeigen" icon="pi pi-chart-bar" 
-                                 styleClass="ui-button-outlined" outcome="statistics" />
+                        <p:button value="Statistiken anzeigen" icon="pi pi-chart-bar"
+                                 styleClass="ui-button-outlined" outcome="tickets" />
                     </div>
                 </p:card>
             </div>
@@ -62,8 +62,7 @@
                         Datenbank-Backup, Wartung und Migrationstools
                     </p>
                     <div style="text-align: center;">
-                        <p:button value="Datenbank verwalten" icon="pi pi-database" 
-                                 styleClass="ui-button-outlined" outcome="database" />
+                        <span class="text-muted" style="font-style: italic;">In Vorbereitung</span>
                     </div>
                 </p:card>
             </div>
@@ -81,8 +80,7 @@
                         Globale Konfiguration und Systemparameter
                     </p>
                     <div style="text-align: center;">
-                        <p:button value="Einstellungen bearbeiten" icon="pi pi-cog" 
-                                 styleClass="ui-button-outlined" outcome="settings" />
+                        <span class="text-muted" style="font-style: italic;">In Vorbereitung</span>
                     </div>
                 </p:card>
             </div>
@@ -100,8 +98,7 @@
                         Systemprotokolle und Aktivitätsverfolgung
                     </p>
                     <div style="text-align: center;">
-                        <p:button value="Logs anzeigen" icon="pi pi-file" 
-                                 styleClass="ui-button-outlined" outcome="logs" />
+                        <span class="text-muted" style="font-style: italic;">In Vorbereitung</span>
                     </div>
                 </p:card>
             </div>
@@ -119,8 +116,7 @@
                         Technische Details und Systemstatus
                     </p>
                     <div style="text-align: center;">
-                        <p:button value="System-Info" icon="pi pi-info-circle" 
-                                 styleClass="ui-button-outlined" outcome="system-info" />
+                        <span class="text-muted" style="font-style: italic;">In Vorbereitung</span>
                     </div>
                 </p:card>
             </div>
@@ -140,13 +136,13 @@
                 </div>
                 <div class="col-12 md:col-3">
                     <div class="text-center">
-                        <h2 style="color: var(--orange-500); margin: 0;">#{adminBean.dashboardStats.byStatus['Offen'] ?: 0}</h2>
+                        <h2 style="color: var(--orange-500); margin: 0;">#{not empty adminBean.dashboardStats.byStatus['Offen'] ? adminBean.dashboardStats.byStatus['Offen'] : 0}</h2>
                         <p class="text-muted">Offene Tickets</p>
                     </div>
                 </div>
                 <div class="col-12 md:col-3">
                     <div class="text-center">
-                        <h2 style="color: var(--green-500); margin: 0;">#{(adminBean.dashboardStats.byStatus['Gelöst'] ?: 0) + (adminBean.dashboardStats.byStatus['Gelöst bestätigt'] ?: 0)}</h2>
+                        <h2 style="color: var(--green-500); margin: 0;">#{(not empty adminBean.dashboardStats.byStatus['Gelöst'] ? adminBean.dashboardStats.byStatus['Gelöst'] : 0) + (not empty adminBean.dashboardStats.byStatus['Gelöst bestätigt'] ? adminBean.dashboardStats.byStatus['Gelöst bestätigt'] : 0)}</h2>
                         <p class="text-muted">Gelöste/Bestätigte Tickets</p>
                     </div>
                 </div>

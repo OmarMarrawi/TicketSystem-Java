@@ -12,7 +12,7 @@ Diese Datei dient als kompakte Referenz, damit das Projekt nicht bei jeder Aufga
 ## Tech-Stack
 - Java EE API 8 (`javax:javaee-api`, scope `provided`)
 - JSF + PrimeFaces + OmniFaces
-- MongoDB Java Sync Driver
+- PostgreSQL 16 + Hibernate ORM 5.6 (JPA 2.2, `RESOURCE_LOCAL`)
 - Lombok
 - Jackson
 - jBCrypt
@@ -27,7 +27,7 @@ Diese Datei dient als kompakte Referenz, damit das Projekt nicht bei jeder Aufga
 - `src/main/webapp/WEB-INF` - Web-/JSF-/CDI-Konfiguration
 
 ## Zentrale Klassen
-- `MongoService` - MongoDB Verbindung und Collections (`users`, `tickets`)
+- `DatabaseService` - PostgreSQL/Hibernate Verbindung und Transaktions-Helper
 - `AuthService` - Login, Registrierung, Benutzerverwaltung
 - `TicketService` - Ticket-CRUD, Filter, Dashboard-Statistiken
 - `LoginBean` - Login-Flow und Session
@@ -49,14 +49,16 @@ Diese Datei dient als kompakte Referenz, damit das Projekt nicht bei jeder Aufga
 - Typischer Ablauf: Login -> Dashboard -> Ticketliste -> Ticketdetail / Ticket anlegen
 
 ## Konfiguration
-- MongoDB URL:
-  - Env: `MONGO_URL`
-  - Fallback System-Property: `MONGO_URL`
-  - Default: `mongodb://localhost:27017`
-- Datenbankname:
-  - Env: `DB_NAME`
-  - Fallback System-Property: `DB_NAME`
-  - Default: `ticket_system_db`
+- PostgreSQL URL:
+  - Env: `DB_URL`
+  - Fallback System-Property: `DB_URL`
+  - Default: `jdbc:postgresql://localhost:5432/ticket_system_db`
+- Datenbank-Benutzer:
+  - Env/System-Property: `DB_USER`, Default: `postgres`
+  - Env/System-Property: `DB_PASSWORD`, Default: `zag`
+  - Lokale PostgreSQL 16, Datenbank `ticket_system_db` bereits angelegt
+- JPA Unit: `ticketPU` (`src/main/resources/META-INF/persistence.xml`)
+- Schema wird automatisch erzeugt/aktualisiert (`hibernate.hbm2ddl.auto=update`)
 - JSF Stage: `Development`
 - PrimeFaces Theme: `saga`
 
@@ -64,6 +66,7 @@ Diese Datei dient als kompakte Referenz, damit das Projekt nicht bei jeder Aufga
 - Lokaler Build: `mvn clean package`
 - Artefakt: `target/ticket-system.war`
 - Docker: Multi-Stage Build (Maven + Payara Micro)
+- Deployment (später): Plan in `DEPLOYMENT.md` (Koyeb + Neon, kostenlos)
 
 ## Tests
 - Aktuell kein `src/test` gefunden
@@ -73,7 +76,7 @@ Diese Datei dient als kompakte Referenz, damit das Projekt nicht bei jeder Aufga
 Bei neuen Aufgaben zuerst diese Datei lesen und nur bei Bedarf gezielt in folgende Dateien schauen:
 - Build/Dependencies: `pom.xml`
 - Laufzeit/Web-Konfig: `src/main/webapp/WEB-INF/web.xml`
-- DB-Konfig: `src/main/java/com/bvl/ticket/service/MongoService.java`
+- DB-Konfig: `src/main/java/com/bvl/ticket/service/DatabaseService.java` und `src/main/resources/META-INF/persistence.xml`
 - Geschaeftslogik Tickets: `src/main/java/com/bvl/ticket/service/TicketService.java`
 - Auth-Flow: `src/main/java/com/bvl/ticket/service/AuthService.java`
 

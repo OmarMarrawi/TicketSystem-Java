@@ -34,6 +34,9 @@
             <h:link outcome="tickets" styleClass="nav-btn #{view.viewId.contains('tickets') ? 'active' : ''}">
                 <i class="pi pi-list"></i> Tickets
             </h:link>
+            <h:link outcome="vacations" styleClass="nav-btn #{view.viewId.contains('vacations') ? 'active' : ''}">
+                <i class="pi pi-calendar"></i> Urlaub
+            </h:link>
             <h:link outcome="admin" styleClass="nav-btn #{view.viewId.contains('admin') ? 'active' : ''}" rendered="#{loginBean.currentUser.role == 'ADMIN'}">
                 <i class="pi pi-cog"></i> Admin
             </h:link>

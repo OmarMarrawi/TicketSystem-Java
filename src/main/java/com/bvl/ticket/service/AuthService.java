@@ -2,19 +2,12 @@ package com.bvl.ticket.service;
 
 import com.bvl.ticket.model.User;
 import com.bvl.ticket.model.UserRole;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import org.bson.Document;
+import javax.persistence.NoResultException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.UUID;
 
 @ApplicationScoped
 /**
@@ -24,16 +17,8 @@ public class AuthService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
-    // Datenbank-Feldnamen
-    private static final String F_ID = "id";
-    private static final String F_EMAIL = "email";
-    private static final String F_PASSWORD = "password";
-    private static final String F_NAME = "name";
-    private static final String F_ROLE = "role";
-    private static final String F_CREATED_AT = "created_at";
-
     @Inject
-    private MongoService mongoService;
+    private DatabaseService database;
 
     /**
      * Initialisiert die Datenbank beim ersten Start.
@@ -41,17 +26,19 @@ public class AuthService {
     @javax.annotation.PostConstruct
     public void init() {
         try {
-            MongoCollection<Document> users = mongoService.getUsersCollection();
-            if (users.countDocuments() == 0) {
+            Long count = database.read(em -> em.createQuery(
+                    "SELECT COUNT(u) FROM User u", Long.class).getSingleResult());
+
+            if (count == null || count == 0) {
                 logger.info("Keine Nutzer gefunden. Erstelle Standard-Accounts...");
 
                 // 1. Admin erstellen
-                createUser(users, "admin@bvl.bund.de", "admin", "404 Entwickler", UserRole.ADMIN);
+                createUser("admin@bvl.bund.de", "admin", "404 Entwickler", UserRole.ADMIN);
 
                 // 2. Referats-Nutzer 401 bis 405 erstellen
                 for (int i = 401; i <= 405; i++) {
                     String refNo = String.valueOf(i);
-                    createUser(users, refNo + "@bvl.bund.de", refNo, "Mitarbeiter Referat " + refNo,
+                    createUser(refNo + "@bvl.bund.de", refNo, "Mitarbeiter Referat " + refNo,
                             UserRole.valueOf("REFERAT" + refNo));
                 }
                 logger.info("Standard-Nutzer erfolgreich angelegt.");
@@ -61,29 +48,23 @@ public class AuthService {
         }
     }
 
-    private void createUser(MongoCollection<Document> collection, String email, String password, String name,
-            UserRole role) {
-        Document user = new Document();
-        user.append(F_ID, UUID.randomUUID().toString());
-        user.append(F_EMAIL, email);
-        user.append(F_PASSWORD, BCrypt.hashpw(password, BCrypt.gensalt()));
-        user.append(F_NAME, name);
-        user.append(F_ROLE, role.name());
-        user.append(F_CREATED_AT, LocalDateTime.now().toString());
-        collection.insertOne(user);
+    private void createUser(String email, String password, String name, UserRole role) {
+        database.run(em -> {
+            User user = new User();
+            user.setEmail(email);
+            user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+            user.setName(name);
+            user.setRole(role);
+            em.persist(user);
+        });
     }
 
     public User login(String email, String password) {
         try {
-            MongoCollection<Document> users = mongoService.getUsersCollection();
-            Document userDoc = users.find(Filters.eq(F_EMAIL, email)).first();
-
-            if (userDoc != null) {
-                String hashedPassword = userDoc.getString(F_PASSWORD);
-                if (BCrypt.checkpw(password, hashedPassword)) {
-                    logger.info("Login erfolgreich für: {}", email);
-                    return mapDocumentToUser(userDoc);
-                }
+            User user = findUserByEmail(email);
+            if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+                logger.info("Login erfolgreich für: {}", email);
+                return user;
             }
             logger.warn("Login-Versuch fehlgeschlagen für: {}", email);
         } catch (Exception e) {
@@ -103,58 +84,100 @@ public class AuthService {
      * @throws IllegalArgumentException Wenn ein Benutzer mit der angegebenen E-Mail bereits existiert.
      */
     public User registerUser(String email, String password, String name, UserRole role) {
-        MongoCollection<Document> users = mongoService.getUsersCollection();
-
         // Prüfen, ob die E-Mail bereits existiert
-        if (users.find(Filters.eq(F_EMAIL, email)).first() != null) {
+        if (findUserByEmail(email) != null) {
             throw new IllegalArgumentException("Ein Benutzer mit dieser E-Mail-Adresse existiert bereits.");
         }
 
-        // Passwort hashen
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        // Benutzer anlegen und Passwort hashen
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        newUser.setName(name);
+        newUser.setRole(role);
 
-        // Benutzer-Dokument erstellen
-        Document newUserDoc = new Document();
-        newUserDoc.append(F_ID, UUID.randomUUID().toString());
-        newUserDoc.append(F_EMAIL, email);
-        newUserDoc.append(F_PASSWORD, hashedPassword);
-        newUserDoc.append(F_NAME, name);
-        newUserDoc.append(F_ROLE, role.name());
-        newUserDoc.append(F_CREATED_AT, LocalDateTime.now().toString());
-
-        // Benutzer in die Datenbank einfügen
-        users.insertOne(newUserDoc);
+        database.run(em -> em.persist(newUser));
         logger.info("Neuer Benutzer registriert: {}", email);
 
-        return mapDocumentToUser(newUserDoc);
+        return newUser;
     }
 
     public java.util.List<User> getAllUsers() {
-        java.util.List<User> userList = new java.util.ArrayList<>();
         try {
-            MongoCollection<Document> users = mongoService.getUsersCollection();
-            for (Document doc : users.find()) {
-                userList.add(mapDocumentToUser(doc));
-            }
+            return database.read(em -> em.createQuery(
+                    "SELECT u FROM User u ORDER BY u.createdAt ASC", User.class)
+                    .getResultList());
         } catch (Exception e) {
             logger.error("Fehler beim Laden aller Benutzer", e);
+            return new java.util.ArrayList<>();
         }
-        return userList;
     }
 
-    private User mapDocumentToUser(Document doc) {
-        User user = new User();
-        user.setId(doc.getString(F_ID));
-        user.setEmail(doc.getString(F_EMAIL));
-        user.setName(doc.getString(F_NAME));
-        user.setRole(UserRole.valueOf(doc.getString(F_ROLE).toUpperCase()));
-
-        Object createdAt = doc.get(F_CREATED_AT);
-        if (createdAt instanceof String) {
-            user.setCreatedAt(LocalDateTime.parse((String) createdAt));
-        } else if (createdAt instanceof Date) {
-            user.setCreatedAt(((Date) createdAt).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+    /**
+     * Legt einen neuen Benutzer an oder aktualisiert einen bestehenden.
+     * Wenn ein neues Passwort übergeben wird, wird es gehasht gespeichert.
+     *
+     * @throws IllegalArgumentException Wenn die E-Mail bereits von einem anderen Benutzer verwendet wird.
+     */
+    public void updateUser(User user, String newPassword) {
+        User existing = findUserByEmail(user.getEmail());
+        if (existing != null && !existing.getId().equals(user.getId())) {
+            throw new IllegalArgumentException("Ein Benutzer mit dieser E-Mail-Adresse existiert bereits.");
         }
-        return user;
+
+        final boolean isNew = (user.getId() == null);
+        database.run(em -> {
+            if (newPassword != null && !newPassword.isEmpty()) {
+                user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            }
+            if (isNew) {
+                em.persist(user);
+            } else {
+                em.merge(user);
+            }
+        });
+
+        if (isNew) {
+            logger.info("Neuer Benutzer erstellt: {} (ID {})", user.getEmail(), user.getId());
+        } else {
+            logger.info("Benutzer aktualisiert: {} (ID {})", user.getEmail(), user.getId());
+        }
+    }
+
+    /**
+     * Setzt ein neues Passwort für den Benutzer (wird gehasht gespeichert).
+     */
+    public void updatePassword(Long userId, String newPassword) {
+        database.run(em -> {
+            User user = em.find(User.class, userId);
+            if (user != null) {
+                user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+            }
+        });
+        logger.info("Passwort zurückgesetzt für Benutzer-ID {}", userId);
+    }
+
+    /**
+     * Löscht einen Benutzer permanent.
+     */
+    public void deleteUser(Long userId) {
+        database.run(em -> {
+            User user = em.find(User.class, userId);
+            if (user != null) {
+                em.remove(user);
+            }
+        });
+        logger.info("Benutzer mit ID {} gelöscht", userId);
+    }
+
+    private User findUserByEmail(String email) {
+        try {
+            return database.read(em -> em.createQuery(
+                    "SELECT u FROM User u WHERE u.email = :email", User.class)
+                    .setParameter("email", email)
+                    .getSingleResult());
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 }

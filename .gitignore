@@ -1,6 +1,11 @@
 target/
 *.class
 *.log
+*.jar
+*.zip
 .idea/
 *.iml
 .DS_Store
+.env
+payara-err.log
+payara-out.log
